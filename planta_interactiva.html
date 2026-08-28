@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planta de Producción y Tratamiento Primario — Simulador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #10161d;
+    --panel: #161f28;
+    --panel-2: #1c2732;
+    --line: #2a3745;
+    --ink: #e7edf3;
+    --ink-dim: #90a1b0;
+    --amber: #e0a02f;
+    --oil: #8a5a2e;
+    --gas: #d1453a;
+    --water: #4fb2d6;
+    --chem: #63c98a;
+    --data: #8a97a3;
+    --danger: #e0603e;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 20% -10%, #182531 0%, var(--bg) 45%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+  }
+  header{
+    padding:22px 28px 14px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  header .title-block{max-width:720px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    color:var(--amber);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:26px;
+    font-weight:700;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  header p{
+    margin:0;
+    color:var(--ink-dim);
+    font-size:13.5px;
+    line-height:1.5;
+  }
+  #resetBtn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-dim);
+    background:transparent;
+    border:1px solid var(--line);
+    padding:8px 14px;
+    border-radius:6px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  #resetBtn:hover{color:var(--ink); border-color:var(--ink-dim);}
+
+  .layout{
+    display:grid;
+    grid-template-columns: 1fr 380px;
+    gap:0;
+    align-items:stretch;
+  }
+  @media (max-width: 980px){
+    .layout{grid-template-columns: 1fr;}
+  }
+
+  .map-wrap{
+    position:relative;
+    padding:18px;
+    overflow-x:auto;
+  }
+  .zones-row{
+    display:flex;
+    gap:4px;
+    margin-bottom:6px;
+    min-width:1360px;
+  }
+  .zone-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    color:var(--ink-dim);
+    padding:6px 10px;
+    border-top:2px solid var(--line);
+  }
+  svg#plant{
+    display:block;
+    min-width:1360px;
+  }
+  .zone-bg{fill: var(--panel); opacity:0.5;}
+  .zone-bg.alt{fill:var(--panel-2); opacity:0.5;}
+
+  .pipe{ fill:none; stroke-width:3.5; stroke-linecap:round; }
+  .pipe.oil{stroke:var(--oil);}
+  .pipe.gas{stroke:var(--gas); stroke-dasharray: 2 7;}
+  .pipe.water{stroke:var(--water);}
+  .pipe.chem{stroke:var(--chem); stroke-dasharray: 1 6;}
+  .pipe.loop{opacity:0.55;}
+  .flow{
+    stroke-dasharray: 6 10;
+    animation: dash 4.5s linear infinite;
+    opacity:0.85;
+  }
+  @keyframes dash{ to { stroke-dashoffset: -160; } }
+
+  .dataline{
+    stroke:var(--data);
+    stroke-width:1;
+    stroke-dasharray:1 6;
+    opacity:0.28;
+    animation: datadash 3.5s linear infinite;
+  }
+  @keyframes datadash{ to { stroke-dashoffset:-140; } }
+
+  .node{cursor:pointer;}
+  .node .halo{
+    fill:none;
+    stroke:var(--amber);
+    stroke-width:2;
+    opacity:0;
+    transition:opacity .15s;
+  }
+  .node:hover .halo{opacity:0.55;}
+  .node.active .halo{opacity:1;}
+  .node .shape{
+    fill:var(--panel-2);
+    stroke:var(--line);
+    stroke-width:1.5;
+    transition:fill .15s, stroke .15s;
+  }
+  .node:hover .shape, .node.active .shape{ stroke:var(--amber); }
+  .node.active .shape{fill:#2a2013;}
+  .node.trial .shape{stroke:var(--chem); stroke-width:2;}
+  .node text.num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    font-weight:600;
+    fill:var(--amber);
+    text-anchor:middle;
+    dominant-baseline:central;
+    pointer-events:none;
+  }
+  .node text.label{
+    font-family:'Inter', sans-serif;
+    font-size:11px;
+    fill:var(--ink-dim);
+    text-anchor:middle;
+    pointer-events:none;
+  }
+  .node .badge{ fill:var(--chem); }
+  .node .badge-text{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:8px;
+    fill:#08130c;
+    text-anchor:middle;
+    dominant-baseline:central;
+    pointer-events:none;
+    font-weight:600;
+  }
+
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:16px;
+    padding:10px 28px 20px;
+    border-top:1px solid var(--line);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-dim);
+  }
+  .legend .item{display:flex; align-items:center; gap:6px;}
+  .legend .swatch{width:20px; height:3px; border-radius:2px;}
+
+  /* ---- Panel ---- */
+  .panel{
+    background:var(--panel);
+    border-left:1px solid var(--line);
+    padding:24px 22px;
+    min-height:520px;
+  }
+  .panel .empty{
+    color:var(--ink-dim);
+    font-size:13.5px;
+    line-height:1.6;
+    padding-top:40px;
+    text-align:center;
+  }
+  .panel .empty .big{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:16px;
+    color:var(--ink);
+    display:block;
+    margin-bottom:8px;
+  }
+  .panel-eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--amber);
+    letter-spacing:0.08em;
+  }
+  .panel h2{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:20px;
+    margin:4px 0 12px;
+  }
+  .panel .desc{
+    font-size:13.5px;
+    line-height:1.6;
+    color:var(--ink-dim);
+    margin-bottom:18px;
+  }
+  .trial-box{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px;
+    margin-top:6px;
+  }
+  .trial-box h3{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.06em;
+    color:var(--chem);
+    text-transform:uppercase;
+    margin:0 0 12px;
+  }
+  .field{margin-bottom:16px;}
+  .field label{
+    display:flex;
+    justify-content:space-between;
+    font-size:12.5px;
+    color:var(--ink-dim);
+    margin-bottom:6px;
+  }
+  .field label span.val{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--ink);
+  }
+  input[type=range]{
+    width:100%;
+    accent-color: var(--chem);
+  }
+  select{
+    width:100%;
+    background:var(--panel);
+    color:var(--ink);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:8px;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+  }
+  .result{
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px dashed var(--line);
+  }
+  .result .row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:13px;
+    margin-bottom:8px;
+  }
+  .result .row .rv{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+  }
+  .bar-bg{
+    height:6px;
+    background:var(--panel);
+    border-radius:3px;
+    overflow:hidden;
+    margin-top:4px;
+  }
+  .bar-fill{
+    height:100%;
+    border-radius:3px;
+    transition:width .25s ease;
+  }
+  .verdict{
+    margin-top:12px;
+    font-size:12.5px;
+    padding:10px 12px;
+    border-radius:8px;
+    line-height:1.5;
+  }
+  .verdict.good{background:rgba(99,201,138,0.12); color:var(--chem); border:1px solid rgba(99,201,138,0.3);}
+  .verdict.mid{background:rgba(224,160,47,0.12); color:var(--amber); border:1px solid rgba(224,160,47,0.3);}
+  .verdict.bad{background:rgba(224,96,62,0.12); color:var(--danger); border:1px solid rgba(224,96,62,0.3);}
+  .no-trial-note{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    color:var(--ink-dim);
+    border:1px dashed var(--line);
+    border-radius:8px;
+    padding:12px;
+    margin-top:6px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-block">
+    <div class="eyebrow">Esquema de proceso · Layout general</div>
+    <h1>Planta de Producción y Tratamiento Primario de Petróleo y Gas</h1>
+    <p>Tocá cualquier equipo del esquema para ver su función. Los equipos marcados con <span style="color:var(--chem)">●</span> tienen un ensayo interactivo. Las líneas grises finas representan la transmisión de datos hacia la Sala de Control.</p>
+  </div>
+  <button id="resetBtn" onclick="deselect()">Ver esquema completo</button>
+</header>
+
+<div class="layout">
+  <div class="map-wrap">
+    <div class="zones-row">
+      <div class="zone-label" style="width:210px;">1. PRODUCCIÓN</div>
+      <div class="zone-label" style="width:220px;">2. RECEPCIÓN</div>
+      <div class="zone-label" style="width:220px;">3. SEPARACIÓN</div>
+      <div class="zone-label" style="width:260px;">4. ACONDICIONAMIENTO</div>
+      <div class="zone-label" style="width:200px;">5. ALMACENAMIENTO</div>
+      <div class="zone-label" style="width:250px;">6. DESPACHO</div>
+    </div>
+    <svg id="plant" viewBox="0 0 1360 660" width="1360" height="660">
+      <!-- zone backgrounds -->
+      <rect class="zone-bg" x="0" y="0" width="210" height="440"></rect>
+      <rect class="zone-bg alt" x="210" y="0" width="220" height="440"></rect>
+      <rect class="zone-bg" x="430" y="0" width="220" height="440"></rect>
+      <rect class="zone-bg alt" x="650" y="0" width="260" height="440"></rect>
+      <rect class="zone-bg" x="910" y="0" width="200" height="440"></rect>
+      <rect class="zone-bg alt" x="1110" y="0" width="250" height="440"></rect>
+
+      <!-- ===================== PIPES ===================== -->
+
+      <!-- pozo de petróleo (1) -> registradores (3) -->
+      <path class="pipe oil flow" d="M90,190 L90,240 L245,240 L245,262"/>
+      <!-- registradores (3) -> manifold (4) -->
+      <path class="pipe oil flow" d="M245,298 L245,320 L400,320 L400,213"/>
+      <!-- pozo con Gas Lift (1) -> manifold (4), única conexión de este pozo -->
+      <path class="pipe gas flow" d="M90,300 L90,340 L370,340 L370,213"/>
+
+      <!-- manifold (4) -> separador (5) -->
+      <path class="pipe oil flow" d="M450,200 L560,200"/>
+      <!-- manifold (4) -> bomba química proceso (6) -->
+      <path class="pipe chem flow" d="M400,213 L400,340 L500,340"/>
+      <!-- bomba química proceso (6) inyecta de vuelta antes del separador -->
+      <path class="pipe chem flow" d="M520,320 L520,260 L560,260 L560,217"/>
+
+      <!-- separador (5) -> gas hacia planta compresora (2) -->
+      <path class="pipe gas flow" d="M560,183 L560,130 L780,130 L780,158"/>
+
+      <!-- separador (5) -> calentador (7) -->
+      <path class="pipe oil flow" d="M560,217 L560,290 L700,290"/>
+      <!-- calentador (7) -> tanque de lavado (8) -->
+      <path class="pipe oil flow" d="M700,290 L850,290"/>
+      <!-- tanque de lavado (8) -> tanque de almacenamiento (9) -->
+      <path class="pipe oil flow" d="M850,290 L850,255 L980,255"/>
+      <!-- tanque de almacenamiento (9) -> bomba de transferencia (11) -->
+      <path class="pipe oil flow" d="M980,255 L1230,255 L1230,262"/>
+      <!-- tanque de almacenamiento (9) -> Sector A.T.T. (17) -->
+      <path class="pipe oil loop" d="M980,275 L980,340 L1030,340 L1030,362" stroke-dasharray="2 6"/>
+
+      <!-- separador (5) -> bomba de recirculación (10) -->
+      <path class="pipe water flow" d="M600,217 L600,400 L800,400"/>
+      <!-- bomba de recirculación (10) -> bomba inyección química agua (13) -->
+      <path class="pipe water flow" d="M800,420 L800,500 L300,500 L300,522"/>
+      <!-- bomba química proceso (6) -> bomba inyección química agua (13) -->
+      <path class="pipe chem flow" d="M520,360 L520,460 L300,460 L300,522"/>
+
+      <!-- circuito de agua producida: 12 -> 13 -> 14 -> 15 -> 16 -->
+      <path class="pipe water flow" d="M175,540 L280,540"/>
+      <path class="pipe water flow" d="M320,540 L460,540"/>
+      <path class="pipe water flow" d="M500,540 L660,540"/>
+      <path class="pipe water flow" d="M700,540 L840,540"/>
+
+      <!-- bombas de inyección/disposición (16) -> pozo de petróleo (1) -->
+      <path class="pipe water loop" d="M860,562 L860,610 L40,610 L40,190 L70,190" stroke-dasharray="3 8"/>
+
+      <!-- líneas de datos hacia la Sala de Control (generadas por JS) -->
+      <g id="datalines"></g>
+
+      <!-- NODES (generated) -->
+      <g id="nodes"></g>
+    </svg>
+  </div>
+
+  <div class="panel" id="panel">
+    <div class="empty">
+      <span class="big">Ningún equipo seleccionado</span>
+      Elegí un nodo numerado en el esquema para ver su función y, si tiene ensayo disponible, probarlo con distintos parámetros.
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="item"><span class="swatch" style="background:var(--oil)"></span>Petróleo / crudo</div>
+  <div class="item"><span class="swatch" style="background:var(--gas)"></span>Gas</div>
+  <div class="item"><span class="swatch" style="background:var(--water)"></span>Agua</div>
+  <div class="item"><span class="swatch" style="background:var(--chem)"></span>Productos químicos</div>
+  <div class="item"><span class="swatch" style="background:var(--data)"></span>Transmisión de datos</div>
+  <div class="item">● Equipo con ensayo interactivo</div>
+</div>
+
+<script>
+/* ============================================================
+   1) DATOS DE LOS EQUIPOS
+   Los dos pozos comparten el número 1 (mismo "punto" del esquema)
+   pero tienen id interno distinto y un anillo de color propio
+   para diferenciarse: marrón = petróleo, rojo = Gas Lift.
+   El Manifold (4) usa forma de rectángulo alargado y el
+   Separador (5) forma de cilindro horizontal.
+   ============================================================ */
+
+const equipos = [
+  {
+    id:1, num:1, x:90, y:170, name:"Pozo productor (petróleo)",
+    ringColor:"var(--oil)",
+    desc:"Extrae los fluidos presentes en el yacimiento. Lo que llega a superficie no es petróleo puro, sino una mezcla de petróleo, gas y agua. Su única salida se dirige hacia los registradores de flujo."
+  },
+  {
+    id:101, num:1, x:90, y:300, name:"Pozo con Gas Lift",
+    ringColor:"var(--gas)",
+    desc:"Pozo que utiliza levantamiento artificial mediante inyección de gas comprimido, para los casos en que la presión natural del yacimiento no alcanza para llevar los fluidos hasta superficie de manera eficiente. A diferencia del pozo de petróleo, su producción se envía directamente al manifold, sin pasar por los registradores de flujo."
+  },
+  {
+    id:2, num:2, x:780, y:130, name:"Planta compresora Gas Lift",
+    desc:"Comprime el gas que llega desde el separador para reinyectarlo en los pozos que utilizan levantamiento artificial. El gas comprimido reduce la densidad de la columna de fluido y facilita el ascenso del petróleo.",
+    trial:{
+      type:"gaslift",
+      title:"Ensayo: caudal de gas inyectado",
+      controls:[{id:"q", label:"Caudal de gas inyectado", unit:"Mscf/d", min:0, max:2000, step:50, def:600}]
+    }
+  },
+  {
+    id:3, num:3, x:245, y:280, name:"Registradores de flujo",
+    desc:"Miden el caudal proveniente del pozo de petróleo para control de producción y balances. Permiten detectar cambios anormales antes de que la corriente llegue al manifold."
+  },
+  {
+    id:4, num:4, x:400, y:200, name:"Múltiple (Manifold)",
+    shape:"rect", w:100, h:26,
+    desc:"Reúne la producción del pozo de petróleo (a través de los registradores de flujo) y del pozo con Gas Lift (conexión directa). Permite aislar, desviar y controlar cada línea. Desde acá la corriente se divide hacia el separador trifásico y hacia la bomba de inyección de química."
+  },
+  {
+    id:5, num:5, x:560, y:200, name:"Separador trifásico",
+    shape:"cylinder", w:90, h:34,
+    desc:"Separa la mezcla proveniente del manifold en tres fases —gas (arriba), petróleo (medio) y agua (abajo)— por diferencia de densidad y disminución de velocidad del fluido dentro del recipiente.",
+    trial:{
+      type:"separador",
+      title:"Ensayo: caudal de entrada al separador",
+      controls:[{id:"caudal", label:"Caudal de entrada", unit:"m³/h", min:50, max:500, step:10, def:200}]
+    }
+  },
+  {
+    id:6, num:6, x:520, y:340, name:"Bomba inyección de química (proceso)",
+    desc:"Dosifica productos químicos —desemulsionantes, inhibidores, antiespumantes— sobre la corriente derivada del manifold, inyectándolos de vuelta antes del separador. Comparte suministro de químicos con la bomba de inyección de química del circuito de agua.",
+    trial:{
+      type:"quimica_proceso",
+      title:"Ensayo: dosificación de químico",
+      controls:[
+        {id:"prod", label:"Producto", type:"select", options:[
+          {v:"desemulsionante", t:"Desemulsionante"},
+          {v:"antiespumante", t:"Antiespumante"},
+          {v:"inhibidor", t:"Inhibidor de corrosión"}
+        ]},
+        {id:"dosis", label:"Dosis", unit:"ppm", min:0, max:200, step:5, def:40}
+      ]
+    }
+  },
+  {
+    id:7, num:7, x:700, y:290, name:"Calentador",
+    desc:"Eleva la temperatura del crudo para reducir su viscosidad y mejorar la separación posterior de agua remanente. Está ubicado antes del tanque de lavado por esa misma razón.",
+    trial:{
+      type:"calentador",
+      title:"Ensayo: temperatura de calentamiento",
+      controls:[{id:"temp", label:"Temperatura", unit:"°C", min:40, max:140, step:5, def:70}]
+    }
+  },
+  {
+    id:8, num:8, x:850, y:290, name:"Tanque de lavado",
+    desc:"Proporciona tiempo de residencia suficiente para que el petróleo termine de separarse del agua remanente que no quedó retenida en el separador trifásico."
+  },
+  {
+    id:9, num:9, x:980, y:255, name:"Tanque de almacenamiento de petróleo",
+    desc:"Almacena el petróleo tratado antes de su transferencia. Funciona como un 'pulmón operativo': los pozos producen de forma continua mientras que la transferencia puede hacerse en otros períodos o caudales."
+  },
+  {
+    id:10, num:10, x:800, y:400, name:"Bomba de recirculación",
+    desc:"Recircula parte del fluido dentro del sistema de acondicionamiento para mejorar la separación o controlar niveles, y envía agua hacia la bomba de inyección de química del circuito auxiliar de agua producida."
+  },
+  {
+    id:11, num:11, x:1230, y:262, name:"Bomba de transferencia",
+    desc:"Toma el petróleo almacenado y le da la energía necesaria para impulsarlo hacia el oleoducto o destino final. Se ubica cerca del tanque para minimizar pérdidas de carga y riesgo de cavitación."
+  },
+  {
+    id:19, num:19, x:1230, y:140, name:"Sala de Control",
+    desc:"Desde acá se supervisa el funcionamiento general de la planta mediante un sistema de control centralizado, monitoreando presión, temperatura, niveles y caudales de todos los equipos en tiempo real. Habitualmente cuenta con dos operadores que trabajan junto a un supervisor o jefe de turno, quien coordina la operación completa de la planta."
+  },
+  {
+    id:12, num:12, x:150, y:540, name:"Pozo de agua salada",
+    desc:"Fuente de agua del yacimiento que alimenta el circuito auxiliar de tratamiento de agua producida."
+  },
+  {
+    id:13, num:13, x:300, y:540, name:"Bomba inyección de química (agua)",
+    desc:"Trata el agua del circuito auxiliar dosificando productos para controlar corrosión, incrustaciones (scale) y microorganismos (biocidas), antes de que el agua sea reinyectada o dispuesta. Recibe también agua desde la bomba de recirculación y comparte suministro con la bomba de inyección de química de proceso.",
+    trial:{
+      type:"quimica_agua",
+      title:"Ensayo: tratamiento químico del agua",
+      controls:[
+        {id:"prod", label:"Producto", type:"select", options:[
+          {v:"corrosion", t:"Inhibidor de corrosión"},
+          {v:"biocida", t:"Biocida"},
+          {v:"incrustante", t:"Antiincrustante"}
+        ]},
+        {id:"dosis", label:"Dosis", unit:"ppm", min:0, max:150, step:5, def:30}
+      ]
+    }
+  },
+  {
+    id:14, num:14, x:480, y:540, name:"Pileta / trampa de agua producida",
+    desc:"Recibe el agua separada y decanta restos de hidrocarburos y sólidos antes de continuar el tratamiento, dado que esta agua puede contener sales, hidrocarburos, sólidos y sustancias corrosivas."
+  },
+  {
+    id:15, num:15, x:680, y:540, name:"Tanque de agua producida",
+    desc:"Almacena temporalmente el agua tratada antes de su reinyección en el yacimiento o disposición final."
+  },
+  {
+    id:16, num:16, x:860, y:540, name:"Bombas de inyección / disposición",
+    desc:"Proporcionan la presión necesaria para enviar el agua tratada hacia el sistema de reinyección en el yacimiento, cerrando el circuito hacia el pozo productor, o hacia su disposición final."
+  },
+  {
+    id:17, num:17, x:1030, y:380, name:"Sector A.T.T. (almacenamiento auxiliar)",
+    desc:"Área auxiliar de almacenamiento de tanques para volúmenes adicionales o productos especiales, dentro del sector de Almacenamiento. Los tanques se agrupan para facilitar inspección, mantenimiento, control de inventario y respuesta ante emergencias, y cuentan con diques de contención perimetrales."
+  }
+];
+
+/* ============================================================
+   2) DIBUJAR LOS NODOS EN EL SVG
+   ============================================================ */
+const svgNS = "http://www.w3.org/2000/svg";
+const nodesGroup = document.getElementById("nodes");
+const dataGroup = document.getElementById("datalines");
+
+function mkEl(tag, attrs){
+  const el = document.createElementNS(svgNS, tag);
+  for(const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+function buildShape(g, eq){
+  const shape = eq.shape || "circle";
+
+  if(shape === "rect"){
+    const w = eq.w, h = eq.h;
+    g.appendChild(mkEl("rect",{class:"halo", x:eq.x-w/2-8, y:eq.y-h/2-8, width:w+16, height:h+16, rx:12}));
+    g.appendChild(mkEl("rect",{class:"shape", x:eq.x-w/2, y:eq.y-h/2, width:w, height:h, rx:6}));
+    return {halfW:w/2, halfH:h/2};
+  }
+
+  if(shape === "cylinder"){
+    const w = eq.w, h = eq.h, cap = h/2;
+    g.appendChild(mkEl("rect",{class:"halo", x:eq.x-w/2-10, y:eq.y-h/2-8, width:w+20, height:h+16, rx:20}));
+    g.appendChild(mkEl("rect",{class:"shape", x:eq.x-w/2+cap*0.4, y:eq.y-h/2, width:w-cap*0.8, height:h}));
+    g.appendChild(mkEl("ellipse",{class:"shape", cx:eq.x-w/2+cap*0.4, cy:eq.y, rx:cap*0.55, ry:cap}));
+    g.appendChild(mkEl("ellipse",{class:"shape", cx:eq.x+w/2-cap*0.4, cy:eq.y, rx:cap*0.55, ry:cap}));
+    return {halfW:w/2, halfH:h/2};
+  }
+
+  // default: circle
+  g.appendChild(mkEl("circle",{class:"halo", cx:eq.x, cy:eq.y, r:26}));
+  if(eq.ringColor){
+    g.appendChild(mkEl("circle",{cx:eq.x, cy:eq.y, r:23, fill:"none", stroke:eq.ringColor, "stroke-width":2.5}));
+  }
+  g.appendChild(mkEl("circle",{class:"shape", cx:eq.x, cy:eq.y, r:20}));
+  return {halfW:20, halfH:20};
+}
+
+equipos.forEach(eq=>{
+  const g = document.createElementNS(svgNS,"g");
+  g.setAttribute("class","node"+(eq.trial?" trial":""));
+  g.setAttribute("id","node-"+eq.id);
+  g.addEventListener("click", ()=>selectEquipo(eq.id));
+
+  const dims = buildShape(g, eq);
+
+  const num = mkEl("text",{class:"num", x:eq.x, y:eq.y});
+  num.textContent = eq.num;
+  g.appendChild(num);
+
+  const label = mkEl("text",{class:"label", x:eq.x, y:eq.y+dims.halfH+18});
+  const words = eq.name.split(" ");
+  let line1 = "", line2 = "";
+  words.forEach(w=>{
+    if((line1+w).length < 16 && !line2) line1 += w+" ";
+    else line2 += w+" ";
+  });
+  const t1 = mkEl("tspan",{x:eq.x, dy:"0"});
+  t1.textContent = line1.trim();
+  label.appendChild(t1);
+  if(line2.trim()){
+    const t2 = mkEl("tspan",{x:eq.x, dy:"13"});
+    t2.textContent = line2.trim();
+    label.appendChild(t2);
+  }
+  g.appendChild(label);
+
+  if(eq.trial){
+    g.appendChild(mkEl("circle",{class:"badge", cx:eq.x+dims.halfW-5, cy:eq.y-dims.halfH+5, r:7}));
+    const bt = mkEl("text",{class:"badge-text", x:eq.x+dims.halfW-5, y:eq.y-dims.halfH+5.5});
+    bt.textContent = "E";
+    g.appendChild(bt);
+  }
+
+  nodesGroup.appendChild(g);
+});
+
+/* ---- líneas de datos: Sala de Control (19) hacia todos los equipos ---- */
+const sala = equipos.find(e=>e.id===19);
+equipos.forEach(eq=>{
+  if(eq.id === 19) return;
+  dataGroup.appendChild(mkEl("line",{
+    class:"dataline",
+    x1:sala.x, y1:sala.y, x2:eq.x, y2:eq.y
+  }));
+});
+
+/* ============================================================
+   3) SELECCIÓN DE EQUIPO Y RENDER DEL PANEL
+   ============================================================ */
+let activeId = null;
+
+function deselect(){
+  activeId = null;
+  document.querySelectorAll(".node.active").forEach(n=>n.classList.remove("active"));
+  document.getElementById("panel").innerHTML = `
+    <div class="empty">
+      <span class="big">Ningún equipo seleccionado</span>
+      Elegí un nodo numerado en el esquema para ver su función y, si tiene ensayo disponible, probarlo con distintos parámetros.
+    </div>`;
+}
+
+function selectEquipo(id){
+  activeId = id;
+  document.querySelectorAll(".node.active").forEach(n=>n.classList.remove("active"));
+  document.getElementById("node-"+id).classList.add("active");
+  const eq = equipos.find(e=>e.id===id);
+  renderPanel(eq);
+}
+
+function renderPanel(eq){
+  const panel = document.getElementById("panel");
+  let html = `
+    <div class="panel-eyebrow">EQUIPO N.° ${eq.num}</div>
+    <h2>${eq.name}</h2>
+    <div class="desc">${eq.desc}</div>
+  `;
+  if(eq.trial){
+    html += `<div class="trial-box" id="trialBox"><h3>${eq.trial.title}</h3><div id="controls"></div><div class="result" id="result"></div></div>`;
+  } else {
+    html += `<div class="no-trial-note">Este equipo todavía no tiene ensayo interactivo cargado. Es un buen próximo paso: seguir el mismo patrón que los equipos marcados con ●.</div>`;
+  }
+  panel.innerHTML = html;
+
+  if(eq.trial) buildTrial(eq);
+}
+
+/* ============================================================
+   4) MOTOR DE ENSAYOS
+   ============================================================ */
+
+const trialState = {};
+
+function buildTrial(eq){
+  const controlsDiv = document.getElementById("controls");
+  controlsDiv.innerHTML = "";
+  trialState[eq.id] = {};
+
+  eq.trial.controls.forEach(c=>{
+    if(c.type === "select"){
+      trialState[eq.id][c.id] = c.options[0].v;
+      const wrap = document.createElement("div");
+      wrap.className = "field";
+      wrap.innerHTML = `<label>${c.label}</label>`;
+      const sel = document.createElement("select");
+      c.options.forEach(o=>{
+        const opt = document.createElement("option");
+        opt.value = o.v; opt.textContent = o.t;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener("change", ()=>{
+        trialState[eq.id][c.id] = sel.value;
+        runTrial(eq);
+      });
+      wrap.appendChild(sel);
+      controlsDiv.appendChild(wrap);
+    } else {
+      trialState[eq.id][c.id] = c.def;
+      const wrap = document.createElement("div");
+      wrap.className = "field";
+      wrap.innerHTML = `<label>${c.label} <span class="val" id="val-${eq.id}-${c.id}">${c.def} ${c.unit}</span></label>`;
+      const input = document.createElement("input");
+      input.type = "range";
+      input.min = c.min; input.max = c.max; input.step = c.step; input.value = c.def;
+      input.addEventListener("input", ()=>{
+        trialState[eq.id][c.id] = Number(input.value);
+        document.getElementById(`val-${eq.id}-${c.id}`).textContent = `${input.value} ${c.unit}`;
+        runTrial(eq);
+      });
+      wrap.appendChild(input);
+      controlsDiv.appendChild(wrap);
+    }
+  });
+
+  runTrial(eq);
+}
+
+function resultRow(label, value, pct, color){
+  return `
+    <div class="row">
+      <span>${label}</span>
+      <span class="rv" style="color:${color}">${value}</span>
+    </div>
+    <div class="bar-bg"><div class="bar-fill" style="width:${Math.max(0,Math.min(100,pct))}%; background:${color}"></div></div>
+  `;
+}
+
+function runTrial(eq){
+  const s = trialState[eq.id];
+  const resultDiv = document.getElementById("result");
+  let out = "";
+
+  if(eq.trial.type === "calentador"){
+    const T = s.temp;
+    const visc = 900 * Math.exp(-0.022*(T-40));
+    let eff = 100*(1-Math.exp(-(T-40)/35));
+    if(T>115) eff -= (T-115)*1.3;
+    eff = Math.max(0,Math.min(99,eff));
+    out += resultRow("Viscosidad resultante", visc.toFixed(0)+" cP", 100-Math.min(100,visc/10), "var(--water)");
+    out += resultRow("Eficiencia de separación posterior", eff.toFixed(0)+"%", eff, "var(--chem)");
+    let verdict, cls;
+    if(T<60){ verdict="Temperatura baja: el crudo sigue viscoso y arrastra agua al tanque de lavado."; cls="bad"; }
+    else if(T<=110){ verdict="Rango adecuado: buena reducción de viscosidad sin pérdida de livianos."; cls="good"; }
+    else { verdict="Temperatura excesiva: hay riesgo de vaporizar componentes livianos y mayor consumo energético."; cls="mid"; }
+    out += `<div class="verdict ${cls}">${verdict}</div>`;
+  }
+
+  if(eq.trial.type === "separador"){
+    const q = s.caudal;
+    let eff = 98 - (q-50)/450*45;
+    eff = Math.max(40,Math.min(98,eff));
+    const aguaEnPetroleo = ((100-eff)*3).toFixed(0);
+    const petroleoEnAgua = ((100-eff)*5).toFixed(0);
+    out += resultRow("Eficiencia de separación", eff.toFixed(0)+"%", eff, "var(--chem)");
+    out += resultRow("Agua remanente en petróleo (aprox.)", aguaEnPetroleo+" ppm", 100-aguaEnPetroleo/3, "var(--oil)");
+    out += resultRow("Petróleo remanente en agua (aprox.)", petroleoEnAgua+" ppm", 100-petroleoEnAgua/5, "var(--water)");
+    let verdict, cls;
+    if(q<200){ verdict="Caudal bajo: buen tiempo de residencia, separación de alta calidad."; cls="good"; }
+    else if(q<=350){ verdict="Caudal moderado: separación aceptable, dentro de diseño típico."; cls="mid"; }
+    else { verdict="Caudal alto: el fluido pasa demasiado rápido, se reduce el tiempo de residencia y baja la calidad de separación."; cls="bad"; }
+    out += `<div class="verdict ${cls}">${verdict}</div>`;
+  }
+
+  if(eq.trial.type === "quimica_proceso"){
+    const dosis = s.dosis;
+    let eff = 0, label = "";
+    if(s.prod === "desemulsionante"){
+      eff = 100*Math.exp(-Math.pow((dosis-65)/55,2));
+      label = "Ruptura de la emulsión agua-petróleo";
+    } else if(s.prod === "antiespumante"){
+      eff = Math.min(95, dosis*1.3);
+      label = "Reducción de espuma en el separador";
+    } else {
+      eff = Math.min(90, dosis*0.9);
+      label = "Reducción de tasa de corrosión";
+    }
+    out += resultRow(label, eff.toFixed(0)+"%", eff, "var(--chem)");
+    let verdict, cls;
+    if(dosis===0){ verdict="Sin producto: el proceso depende únicamente de calor y tiempo de residencia."; cls="bad"; }
+    else if(s.prod==="desemulsionante" && dosis>110){ verdict="Sobredosis: el exceso de desemulsionante puede volver a estabilizar la emulsión (efecto contrario al buscado)."; cls="bad"; }
+    else if(eff>70){ verdict="Buen desempeño en este rango de dosis."; cls="good"; }
+    else { verdict="Dosis insuficiente para lograr el efecto esperado."; cls="mid"; }
+    out += `<div class="verdict ${cls}">${verdict}</div>`;
+  }
+
+  if(eq.trial.type === "quimica_agua"){
+    const dosis = s.dosis;
+    let corrosion=5, bacterias=5, incrustacion=5;
+    if(s.prod==="corrosion") corrosion = Math.min(95, dosis*1.4);
+    if(s.prod==="biocida") bacterias = Math.min(99, dosis*1.6);
+    if(s.prod==="incrustante") incrustacion = Math.min(90, dosis*1.2);
+    out += resultRow("Reducción de corrosión", corrosion.toFixed(0)+"%", corrosion, "var(--water)");
+    out += resultRow("Reducción de microorganismos", bacterias.toFixed(0)+"%", bacterias, "var(--chem)");
+    out += resultRow("Reducción de incrustaciones (scale)", incrustacion.toFixed(0)+"%", incrustacion, "var(--oil)");
+    let verdict, cls;
+    if(dosis===0){ verdict="Sin tratamiento: el agua queda expuesta a corrosión, incrustaciones y crecimiento bacteriano."; cls="bad"; }
+    else if(dosis>110){ verdict="Dosis alta: efecto ya saturado, el exceso solo agrega costo sin mejora relevante."; cls="mid"; }
+    else { verdict="Dosis dentro de un rango razonable de tratamiento."; cls="good"; }
+    out += `<div class="verdict ${cls}">${verdict}</div>`;
+  }
+
+  if(eq.trial.type === "gaslift"){
+    const q = s.q;
+    let prod = 500 + 1.15*q - 0.00055*q*q;
+    prod = Math.max(0,prod);
+    const pct = Math.min(100, prod/1200*100);
+    out += resultRow("Producción estimada", prod.toFixed(0)+" bbl/d", pct, "var(--gas)");
+    let verdict, cls;
+    if(q<400){ verdict="Caudal de gas bajo: levantamiento insuficiente, la producción no alcanza su potencial."; cls="mid"; }
+    else if(q<=1100){ verdict="Rango cercano al óptimo de la curva de rendimiento del Gas Lift."; cls="good"; }
+    else { verdict="Sobreinyección de gas: aumentan las pérdidas por fricción y el 'slippage', la producción deja de mejorar o cae."; cls="bad"; }
+    out += `<div class="verdict ${cls}">${verdict}</div>`;
+  }
+
+  resultDiv.innerHTML = out;
+}
+</script>
+</body>
+</html>
