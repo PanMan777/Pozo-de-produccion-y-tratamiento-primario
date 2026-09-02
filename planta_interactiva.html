@@ -462,10 +462,65 @@
     color:var(--ink-dim);
     font-family:'IBM Plex Mono', monospace;
   }
+  <style>
+.well-panel {
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin: 20px;
+}
+.oil-flow {
+    width: 100%;
+    height: 10px;
+    background: linear-gradient(to right, #8b4513, #a0522d);
+    opacity: 1;
+    animation: flowAnimation 2s linear infinite;
+}
+@keyframes flowAnimation {
+    from { transform: translateX(0); }
+    to { transform: translateX(100%); }
+}
+.valve {
+    width: 30px;
+    height: 30px;
+    background: red;
+    border-radius: 50%;
+    margin: 5px;
+}
+.valve.open {
+    background: green;
+}
+</style>
 </style>
 </head>
 <body>
- 
+  <div class="well-panel">
+    <div class="pressure-card">
+        <canvas id="gaugeCanvas" width="220" height="220"></canvas>
+        <h3><span id="pressureValue">2350</span> PSI</h3>
+        <p>Presión del pozo</p>
+    </div>
+    <div class="well-animation">
+        <div class="surface-tree">
+            <div class="tree-head"></div>
+            <div class="master-valve valve open" id="masterValve"></div>
+            <div class="choke-valve" id="chokeValve"></div>
+        </div>
+        <div class="well-body">
+            <div class="casing"></div>
+            <div class="tubing">
+                <div class="oil-flow" id="oilFlow"></div>
+            </div>
+        </div>
+        <div class="formation"></div>
+    </div>
+    <div class="well-controls">
+        <label>Válvula Maestra</label>
+        <button id="toggleWell">Pozo Abierto</button>
+        <label>Choke (% de apertura)</label>
+        <input type="range" id="chokeSlider" min="0" max="100" value="65">
+        <span id="chokeLabel">65%</span>
+    </div>
+</div>
 <header>
   <div class="title-block">
     <div class="eyebrow">Esquema de proceso · Layout general</div>
@@ -1169,7 +1224,6 @@ function runTrial(eq){
  
   resultDiv.innerHTML = out;
 }
- 
 /* ============================================================
    5) TABLA DE PARÁMETROS Y LÍMITES
    ============================================================ */
@@ -1204,7 +1258,6 @@ const parametros = [
   ["Agua de inyección — filtros de alta velocidad","Tamaño de partícula retenida","5 a 10 μm (1-2 μm con coagulante)","Capacidad 6 a 8 USGPM/pie²"],
   ["Agua de purga a inyección","Hidrocarburos remanentes","< 100 ppm","A la salida del FWKO / tanque cortador"]
 ];
- 
 const paramsBody = document.getElementById("paramsBody");
 function renderParams(filter){
   paramsBody.innerHTML = "";
@@ -1219,6 +1272,37 @@ function renderParams(filter){
 }
 renderParams("");
 document.getElementById("paramSearch").addEventListener("input", e=>renderParams(e.target.value));
+</script>
+</script>
+  <script>
+// Botón para abrir/cerrar pozo
+const masterValve = document.getElementById("masterValve");
+const toggleWell = document.getElementById("toggleWell");
+const oilFlow = document.getElementById("oilFlow");
+let wellOpen = true;
+toggleWell.addEventListener("click", () => {
+    wellOpen = !wellOpen;
+    if (wellOpen) {
+        oilFlow.style.opacity = "1"; // flujo visible
+        toggleWell.textContent = "Pozo Abierto";
+        masterValve.classList.add("open");
+    } else {
+        oilFlow.style.opacity = "0"; // flujo detenido
+        toggleWell.textContent = "Pozo Cerrado";
+        masterValve.classList.remove("open");
+    }
+});
+// Slider para choke
+const chokeSlider = document.getElementById("chokeSlider");
+const chokeLabel = document.getElementById("chokeLabel");
+chokeSlider.addEventListener("input", () => {
+    const value = chokeSlider.value;
+    chokeLabel.textContent = value + "%";
+    // Ajusta intensidad del flujo según choke
+    if (wellOpen) {
+        oilFlow.style.opacity = value / 100; 
+    }
+});
 </script>
 </body>
 </html>
