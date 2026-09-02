@@ -577,39 +577,6 @@
     <!-- WELLHEAD -->
     <div class="bd-card">
       <h3>Puente de producción (cabeza de pozo)</h3>
-      <!-- ====================== POZO PRODUCTOR INTERACTIVO ====================== -->
-<div class="well-panel">
-    <div class="pressure-card">
-        <canvas id="gaugeCanvas" width="220" height="220"></canvas>
-        <h3><span id="pressureValue">2350</span> PSI</h3>
-        <p>Presión del pozo</p>
-    </div>
-    <div class="well-animation">
-        <div class="surface-tree">
-            <div class="tree-head"></div>
-            <div class="master-valve valve open" id="masterValve"></div>
-            <div class="choke-valve" id="chokeValve"></div>
-        </div>
-        <div class="well-body">
-            <div class="casing"></div>
-            <div class="tubing">
-        <div class="oil-flow" id="oilFlow"></div>
-            </div>
-            <div class="gaslift-column" id="gasLiftFlow"></div>
-        </div>
-        <div class="formation"></div>
-    </div>
-    <div class="well-controls">
-        <label>Válvula Maestra</label>
-        <button id="toggleWell">Pozo Abierto</button>
-        <label>Choke (% de apertura)</label>
-        <input type="range" id="chokeSlider" min="0" max="100" value="65">
-        <span id="chokeLabel">65%</span>
-        <label>Gas Lift</label>
-        <input type="range" id="gasLiftSlider" min="0" max="100" value="0">
-        <span id="gasLiftLabel">0%</span>
-    </div>
-</div>
       <svg viewBox="0 0 260 380">
         <!-- suelo -->
         <line x1="20" y1="360" x2="240" y2="360" class="bd-dash"/>
