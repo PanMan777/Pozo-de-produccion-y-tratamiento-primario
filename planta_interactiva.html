@@ -76,7 +76,7 @@
     white-space:nowrap;
   }
   #resetBtn:hover{color:var(--ink); border-color:var(--ink-dim);}
- 
+
   .layout{
     display:grid;
     grid-template-columns: 1fr 380px;
@@ -86,7 +86,7 @@
   @media (max-width: 980px){
     .layout{grid-template-columns: 1fr;}
   }
- 
+
   .map-wrap{
     position:relative;
     padding:18px;
@@ -112,7 +112,7 @@
   }
   .zone-bg{fill: var(--panel); opacity:0.5;}
   .zone-bg.alt{fill:var(--panel-2); opacity:0.5;}
- 
+
   .pipe{ fill:none; stroke-width:3.5; stroke-linecap:round; }
   .pipe.oil{stroke:var(--oil);}
   .pipe.gas{stroke:var(--gas); stroke-dasharray: 2 7;}
@@ -125,7 +125,7 @@
     opacity:0.85;
   }
   @keyframes dash{ to { stroke-dashoffset: -160; } }
- 
+
   .dataline{
     stroke:var(--data);
     stroke-width:1;
@@ -134,7 +134,7 @@
     animation: datadash 3.5s linear infinite;
   }
   @keyframes datadash{ to { stroke-dashoffset:-140; } }
- 
+
   .node{cursor:pointer;}
   .node .halo{
     fill:none;
@@ -180,7 +180,7 @@
     pointer-events:none;
     font-weight:600;
   }
- 
+
   .legend{
     display:flex;
     flex-wrap:wrap;
@@ -193,7 +193,7 @@
   }
   .legend .item{display:flex; align-items:center; gap:6px;}
   .legend .swatch{width:20px; height:3px; border-radius:2px;}
- 
+
   /* ---- Panel ---- */
   .panel{
     background:var(--panel);
@@ -320,7 +320,47 @@
     padding:12px;
     margin-top:6px;
   }
- 
+  .chem-info{
+    font-size:12px;
+    color:var(--ink-dim);
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-left:3px solid var(--chem);
+    border-radius:6px;
+    padding:10px 12px;
+    margin:-6px 0 16px;
+    line-height:1.5;
+  }
+
+  /* ---- Pozo productor: árbol de navidad animado ---- */
+  .well-wrap{ display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; }
+  .well-svg{
+    width:170px;
+    flex:0 0 170px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:8px;
+  }
+  .well-controls{ flex:1 1 200px; min-width:190px; }
+  .valve-btn{
+    width:100%;
+    padding:9px 12px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    cursor:pointer;
+    background:var(--panel);
+    text-align:left;
+  }
+  .valve-btn.open{ color:var(--chem); border-color:rgba(99,201,138,0.4); }
+  .valve-btn.closed{ color:var(--danger); border-color:rgba(224,96,62,0.4); }
+  .oil-particle{ animation:flowUp linear infinite; }
+  @keyframes flowUp{ from{transform:translateY(0);} to{transform:translateY(-340px);} }
+  .gl-particle{ animation:flowDown linear infinite; }
+  @keyframes flowDown{ from{transform:translateY(0);} to{transform:translateY(340px);} }
+  .gauge-needle{ transform-origin:195px 70px; transition:transform .3s ease; }
+
   /* ---- Secciones inferiores: despiece + parámetros ---- */
   .section{
     padding:30px 28px;
@@ -406,7 +446,7 @@
     justify-content:center;
   }
   .bd-list b{color:var(--ink); font-weight:600;}
- 
+
   .table-tools{margin-bottom:12px;}
   #paramSearch{
     width:100%;
@@ -462,65 +502,10 @@
     color:var(--ink-dim);
     font-family:'IBM Plex Mono', monospace;
   }
-  <style>
-.well-panel {
-    border: 1px solid #ccc;
-    padding: 20px;
-    margin: 20px;
-}
-.oil-flow {
-    width: 100%;
-    height: 10px;
-    background: linear-gradient(to right, #8b4513, #a0522d);
-    opacity: 1;
-    animation: flowAnimation 2s linear infinite;
-}
-@keyframes flowAnimation {
-    from { transform: translateX(0); }
-    to { transform: translateX(100%); }
-}
-.valve {
-    width: 30px;
-    height: 30px;
-    background: red;
-    border-radius: 50%;
-    margin: 5px;
-}
-.valve.open {
-    background: green;
-}
-</style>
 </style>
 </head>
 <body>
-  <div class="well-panel">
-    <div class="pressure-card">
-        <canvas id="gaugeCanvas" width="220" height="220"></canvas>
-        <h3><span id="pressureValue">2350</span> PSI</h3>
-        <p>Presión del pozo</p>
-    </div>
-    <div class="well-animation">
-        <div class="surface-tree">
-            <div class="tree-head"></div>
-            <div class="master-valve valve open" id="masterValve"></div>
-            <div class="choke-valve" id="chokeValve"></div>
-        </div>
-        <div class="well-body">
-            <div class="casing"></div>
-            <div class="tubing">
-                <div class="oil-flow" id="oilFlow"></div>
-            </div>
-        </div>
-        <div class="formation"></div>
-    </div>
-    <div class="well-controls">
-        <label>Válvula Maestra</label>
-        <button id="toggleWell">Pozo Abierto</button>
-        <label>Choke (% de apertura)</label>
-        <input type="range" id="chokeSlider" min="0" max="100" value="65">
-        <span id="chokeLabel">65%</span>
-    </div>
-</div>
+
 <header>
   <div class="title-block">
     <div class="eyebrow">Esquema de proceso · Layout general</div>
@@ -529,7 +514,7 @@
   </div>
   <button id="resetBtn" onclick="deselect()">Ver esquema completo</button>
 </header>
- 
+
 <div class="layout">
   <div class="map-wrap">
     <div class="zones-row">
@@ -548,28 +533,28 @@
       <rect class="zone-bg alt" x="650" y="0" width="260" height="440"></rect>
       <rect class="zone-bg" x="910" y="0" width="200" height="440"></rect>
       <rect class="zone-bg alt" x="1110" y="0" width="250" height="440"></rect>
- 
+
       <!-- ===================== PIPES ===================== -->
- 
+
       <!-- pozo de petróleo (1) -> registradores (3) -->
       <path class="pipe oil flow" d="M90,190 L90,240 L245,240 L245,262"/>
       <!-- registradores (3) -> manifold vertical (4), entra por abajo -->
       <path class="pipe oil flow" d="M245,298 L245,320 L392,320 L392,250"/>
       <!-- pozo con Gas Lift -> manifold (4), única conexión de este pozo, entra por la izquierda -->
       <path class="pipe gas flow" d="M90,300 L90,340 L370,340 L370,225 L387,225"/>
- 
+
       <!-- manifold (4) -> separador (5), sale por la derecha -->
       <path class="pipe oil flow" d="M413,200 L560,200"/>
       <!-- manifold (4) -> bomba química proceso (6), sale por abajo -->
       <path class="pipe chem flow" d="M408,250 L408,340 L500,340"/>
       <!-- bomba química proceso (6) inyecta de vuelta antes del separador -->
       <path class="pipe chem flow" d="M520,320 L520,260 L560,260 L560,217"/>
- 
+
       <!-- separador (5) -> gas hacia planta compresora (2) -->
       <path class="pipe gas flow" d="M560,183 L560,130 L780,130 L780,158"/>
       <!-- planta compresora (2) -> pozo de petróleo (1), únicamente con este pozo -->
       <path class="pipe gas flow" d="M780,110 L780,45 L60,45 L60,150 L90,150"/>
- 
+
       <!-- separador (5) -> calentador (7) -->
       <path class="pipe oil flow" d="M560,217 L560,290 L700,290"/>
       <!-- calentador (7) -> tanque de lavado (8) -->
@@ -580,31 +565,31 @@
       <path class="pipe oil flow" d="M980,255 L1230,255 L1230,262"/>
       <!-- tanque de almacenamiento (9) -> Sector A.T.T. (17) -->
       <path class="pipe oil loop" d="M980,275 L980,340 L1030,340 L1030,362" stroke-dasharray="2 6"/>
- 
+
       <!-- separador (5) -> bomba de recirculación (10) -->
       <path class="pipe water flow" d="M600,217 L600,400 L800,400"/>
       <!-- bomba de recirculación (10) -> bomba inyección química agua (13) -->
       <path class="pipe water flow" d="M800,420 L800,500 L300,500 L300,522"/>
       <!-- bomba química proceso (6) -> bomba inyección química agua (13) -->
       <path class="pipe chem flow" d="M520,360 L520,460 L300,460 L300,522"/>
- 
+
       <!-- circuito de agua producida: 12 -> 13 -> 14 -> 15 -> 16 -->
       <path class="pipe water flow" d="M175,540 L280,540"/>
       <path class="pipe water flow" d="M320,540 L460,540"/>
       <path class="pipe water flow" d="M500,540 L660,540"/>
       <path class="pipe water flow" d="M700,540 L840,540"/>
- 
+
       <!-- bombas de inyección/disposición (16) -> pozo de petróleo (1) -->
       <path class="pipe water loop" d="M860,562 L860,610 L40,610 L40,190 L70,190" stroke-dasharray="3 8"/>
- 
+
       <!-- líneas de datos hacia la Sala de Control (generadas por JS) -->
       <g id="datalines"></g>
- 
+
       <!-- NODES (generated) -->
       <g id="nodes"></g>
     </svg>
   </div>
- 
+
   <div class="panel" id="panel">
     <div class="empty">
       <span class="big">Ningún equipo seleccionado</span>
@@ -612,7 +597,7 @@
     </div>
   </div>
 </div>
- 
+
 <div class="legend">
   <div class="item"><span class="swatch" style="background:var(--oil)"></span>Petróleo / crudo</div>
   <div class="item"><span class="swatch" style="background:var(--gas)"></span>Gas</div>
@@ -621,14 +606,14 @@
   <div class="item"><span class="swatch" style="background:var(--data)"></span>Transmisión de datos</div>
   <div class="item">● Equipo con ensayo interactivo</div>
 </div>
- 
+
 <!-- ===================== DESPIECE DE EQUIPOS ===================== -->
 <div class="section">
   <h2 class="title">Despiece de equipos</h2>
   <p class="sub">Esquemas simplificados de las partes principales de tres equipos del proceso, según la información técnica cargada al proyecto. Se puede ir sumando el resto de los equipos con el mismo formato.</p>
- 
+
   <div class="breakdown-grid">
- 
+
     <!-- WELLHEAD -->
     <div class="bd-card">
       <h3>Puente de producción (cabeza de pozo)</h3>
@@ -655,23 +640,23 @@
         <!-- cruceta -->
         <rect x="92" y="72" width="72" height="10" rx="2" class="bd-shape"/>
         <path d="M100,72 L85,40 M156,72 L171,40" class="bd-line"/>
- 
+
         <!-- callouts -->
         <g class="bd-num"><circle cx="200" cy="324" r="9"/><text x="200" y="325">1</text></g>
         <path d="M191,324 L176,324" class="bd-line"/>
- 
+
         <g class="bd-num"><circle cx="200" cy="287" r="9"/><text x="200" y="288">2</text></g>
         <path d="M191,287 L163,287" class="bd-line"/>
- 
+
         <g class="bd-num"><circle cx="230" cy="244" r="9"/><text x="230" y="245">3</text></g>
         <path d="M221,244 L216,244" class="bd-line"/>
- 
+
         <g class="bd-num"><circle cx="200" cy="140" r="9"/><text x="200" y="141">4</text></g>
         <path d="M191,140 L131,140" class="bd-line"/>
- 
+
         <g class="bd-num"><circle cx="200" cy="76" r="9"/><text x="200" y="77">5</text></g>
         <path d="M191,76 L164,76" class="bd-line"/>
- 
+
         <g class="bd-num"><circle cx="30" cy="288" r="9"/><text x="30" y="289">6</text></g>
         <path d="M39,288 L42,288" class="bd-line"/>
       </svg>
@@ -684,7 +669,7 @@
         <li><span class="n">6</span><span><b>Válvula de entre columnas (casing):</b> controla la presión y el gas del espacio anular.</span></li>
       </ol>
     </div>
- 
+
     <!-- SEPARADOR TRIFÁSICO -->
     <div class="bd-card">
       <h3>Separador trifásico</h3>
@@ -694,7 +679,7 @@
         <ellipse cx="370" cy="110" rx="18" ry="50" class="bd-shape"/>
         <line x1="90" y1="100" x2="370" y2="100" class="bd-dash"/>
         <line x1="90" y1="140" x2="370" y2="140" class="bd-dash"/>
- 
+
         <!-- entrada -->
         <path d="M20,110 L108,110" class="bd-line"/>
         <path d="M118,92 L118,128" class="bd-line"/>
@@ -717,7 +702,7 @@
         <!-- descarga agua -->
         <path d="M320,160 L320,215" class="bd-line"/>
         <rect x="312" y="215" width="16" height="12" rx="2" class="bd-shape-alt"/>
- 
+
         <g class="bd-num"><circle cx="20" cy="130" r="9"/><text x="20" y="131">1</text></g>
         <g class="bd-num"><circle cx="175" cy="60" r="9"/><text x="175" y="61">2</text></g>
         <g class="bd-num"><circle cx="321" cy="55" r="9"/><text x="321" y="56">3</text></g>
@@ -740,7 +725,7 @@
         <li><span class="n">8</span><span><b>Válvula de descarga de agua:</b> hacia el circuito de agua producida.</span></li>
       </ol>
     </div>
- 
+
     <!-- CALENTADOR INDIRECTO -->
     <div class="bd-card">
       <h3>Calentador indirecto</h3>
@@ -748,10 +733,10 @@
         <ellipse cx="90" cy="115" rx="16" ry="45" class="bd-shape"/>
         <rect x="90" y="70" width="260" height="90" class="bd-shape"/>
         <ellipse cx="350" cy="115" rx="16" ry="45" class="bd-shape"/>
- 
+
         <!-- serpentin -->
         <path d="M110,95 q15,-14 30,0 t30,0 t30,0 t30,0 t30,0 t30,0" class="bd-line"/>
- 
+
         <!-- tubo de fuego -->
         <rect x="110" y="140" width="220" height="14" rx="4" class="bd-shape-alt"/>
         <!-- quemador principal -->
@@ -766,7 +751,7 @@
         <!-- alivio -->
         <path d="M200,70 L200,40" class="bd-line"/>
         <rect x="193" y="30" width="14" height="12" rx="2" class="bd-shape-alt"/>
- 
+
         <g class="bd-num"><circle cx="200" cy="185" r="9"/><text x="200" y="186">1</text></g>
         <path d="M200,176 L200,161" class="bd-line"/>
         <g class="bd-num"><circle cx="230" cy="70" r="9"/><text x="230" y="71">2</text></g>
@@ -794,19 +779,19 @@
         <li><span class="n">8</span><span><b>Válvula de alivio:</b> protege la carcasa de sobrepresión.</span></li>
       </ol>
     </div>
- 
+
   </div>
 </div>
- 
+
 <!-- ===================== PARÁMETROS Y LÍMITES ===================== -->
 <div class="section">
   <h2 class="title">Parámetros y límites de referencia</h2>
   <p class="sub">Valores de referencia extraídos del material técnico del proyecto. Sirven como punto de comparación al analizar los ensayos: si un resultado se acerca o supera estos límites, en la realidad se estaría saliendo de un rango operativo seguro.</p>
- 
+
   <div class="table-tools">
     <input type="text" id="paramSearch" placeholder="Buscar equipo o parámetro (ej: separador, temperatura, tubing)...">
   </div>
- 
+
   <div class="table-wrap">
     <table class="params" id="paramsTable">
       <thead>
@@ -817,17 +802,18 @@
   </div>
   <div class="src-note">Fuente: material técnico cargado al proyecto (manual de operaciones Upstream).</div>
 </div>
- 
+
 <script>
 /* ============================================================
    1) DATOS DE LOS EQUIPOS
    ============================================================ */
- 
+
 const equipos = [
   {
     id:1, num:1, x:90, y:170, name:"Pozo productor (petróleo)",
     ringColor:"var(--oil)",
-    desc:"Extrae los fluidos presentes en el yacimiento. Lo que llega a superficie no es petróleo puro, sino una mezcla de petróleo, gas y agua. Su única salida se dirige hacia los registradores de flujo, y además recibe la conexión de la planta compresora Gas Lift."
+    desc:"Extrae los fluidos presentes en el yacimiento. Lo que llega a superficie no es petróleo puro, sino una mezcla de petróleo, gas y agua. Su única salida se dirige hacia los registradores de flujo, y además recibe la conexión de la planta compresora Gas Lift.",
+    trial:{ custom:"pozoArbol", title:"Ensayo: control del pozo (árbol de navidad)" }
   },
   {
     id:101, num:1, x:90, y:300, name:"Pozo con Gas Lift",
@@ -873,7 +859,11 @@ const equipos = [
           {v:"desemulsionante", t:"Desemulsionante"},
           {v:"antiespumante", t:"Antiespumante"},
           {v:"inhibidor", t:"Inhibidor de corrosión"}
-        ]},
+        ], chemInfo:{
+          desemulsionante:"Desemulsionante: rompe la película que estabiliza la emulsión agua-petróleo, favoreciendo que las gotas de agua se junten (coalescan) y decanten. Es clave para que el crudo cumpla la especificación de venta (menos del 1% de agua y sedimentos).",
+          antiespumante:"Antiespumante: reduce la tensión superficial de la espuma generada por la liberación de gas dentro del separador, evitando que ocupe volumen útil del recipiente y que sea arrastrada hacia las salidas de gas o líquido.",
+          inhibidor:"Inhibidor de corrosión (proceso): forma una película protectora sobre la superficie interna de cañerías y equipos, reduciendo el ataque de componentes corrosivos como el CO₂ disuelto en el crudo."
+        }},
         {id:"dosis", label:"Dosis", unit:"ppm", min:0, max:200, step:5, def:40}
       ]
     }
@@ -922,7 +912,11 @@ const equipos = [
           {v:"corrosion", t:"Inhibidor de corrosión"},
           {v:"biocida", t:"Biocida"},
           {v:"incrustante", t:"Antiincrustante"}
-        ]},
+        ], chemInfo:{
+          corrosion:"Inhibidor de corrosión: protege cañerías e instalaciones del circuito de agua formando una película sobre el metal, reduciendo el ataque de gases disueltos como el CO₂ y el H₂S, típicos del agua de formación.",
+          biocida:"Biocida: controla el crecimiento de bacterias, principalmente las sulfato-reductoras (BSR), responsables de generar ácido sulfhídrico, favorecer la corrosión microbiológica y taponar pozos inyectores.",
+          incrustante:"Antiincrustante: evita la precipitación de sales como carbonato de calcio o sulfato de bario ('incrustaciones' o scale) que se forman al mezclar aguas de distinto origen o al cambiar la presión y temperatura, previniendo el taponamiento de cañerías y punzados."
+        }},
         {id:"dosis", label:"Dosis", unit:"ppm", min:0, max:150, step:5, def:30}
       ]
     }
@@ -944,30 +938,30 @@ const equipos = [
     desc:"Área auxiliar de almacenamiento de tanques para volúmenes adicionales o productos especiales, dentro del sector de Almacenamiento. Los tanques se agrupan para facilitar inspección, mantenimiento, control de inventario y respuesta ante emergencias, y cuentan con diques de contención perimetrales."
   }
 ];
- 
+
 /* ============================================================
    2) DIBUJAR LOS NODOS EN EL SVG
    ============================================================ */
 const svgNS = "http://www.w3.org/2000/svg";
 const nodesGroup = document.getElementById("nodes");
 const dataGroup = document.getElementById("datalines");
- 
+
 function mkEl(tag, attrs){
   const el = document.createElementNS(svgNS, tag);
   for(const k in attrs) el.setAttribute(k, attrs[k]);
   return el;
 }
- 
+
 function buildShape(g, eq){
   const shape = eq.shape || "circle";
- 
+
   if(shape === "rect"){
     const w = eq.w, h = eq.h;
     g.appendChild(mkEl("rect",{class:"halo", x:eq.x-w/2-8, y:eq.y-h/2-8, width:w+16, height:h+16, rx:12}));
     g.appendChild(mkEl("rect",{class:"shape", x:eq.x-w/2, y:eq.y-h/2, width:w, height:h, rx:6}));
     return {halfW:w/2, halfH:h/2};
   }
- 
+
   if(shape === "cylinder"){
     const w = eq.w, h = eq.h, cap = h/2;
     g.appendChild(mkEl("rect",{class:"halo", x:eq.x-w/2-10, y:eq.y-h/2-8, width:w+20, height:h+16, rx:20}));
@@ -976,7 +970,7 @@ function buildShape(g, eq){
     g.appendChild(mkEl("ellipse",{class:"shape", cx:eq.x+w/2-cap*0.4, cy:eq.y, rx:cap*0.55, ry:cap}));
     return {halfW:w/2, halfH:h/2};
   }
- 
+
   // default: circle
   g.appendChild(mkEl("circle",{class:"halo", cx:eq.x, cy:eq.y, r:26}));
   if(eq.ringColor){
@@ -985,19 +979,19 @@ function buildShape(g, eq){
   g.appendChild(mkEl("circle",{class:"shape", cx:eq.x, cy:eq.y, r:20}));
   return {halfW:20, halfH:20};
 }
- 
+
 equipos.forEach(eq=>{
   const g = document.createElementNS(svgNS,"g");
   g.setAttribute("class","node"+(eq.trial?" trial":""));
   g.setAttribute("id","node-"+eq.id);
   g.addEventListener("click", ()=>selectEquipo(eq.id));
- 
+
   const dims = buildShape(g, eq);
- 
+
   const num = mkEl("text",{class:"num", x:eq.x, y:eq.y});
   num.textContent = eq.num;
   g.appendChild(num);
- 
+
   const label = mkEl("text",{class:"label", x:eq.x, y:eq.y+dims.halfH+18});
   const words = eq.name.split(" ");
   let line1 = "", line2 = "";
@@ -1014,17 +1008,17 @@ equipos.forEach(eq=>{
     label.appendChild(t2);
   }
   g.appendChild(label);
- 
+
   if(eq.trial){
     g.appendChild(mkEl("circle",{class:"badge", cx:eq.x+dims.halfW-5, cy:eq.y-dims.halfH+5, r:7}));
     const bt = mkEl("text",{class:"badge-text", x:eq.x+dims.halfW-5, y:eq.y-dims.halfH+5.5});
     bt.textContent = "E";
     g.appendChild(bt);
   }
- 
+
   nodesGroup.appendChild(g);
 });
- 
+
 /* ---- líneas de datos: Sala de Control (19) hacia todos los equipos ---- */
 const sala = equipos.find(e=>e.id===19);
 equipos.forEach(eq=>{
@@ -1034,12 +1028,12 @@ equipos.forEach(eq=>{
     x1:sala.x, y1:sala.y, x2:eq.x, y2:eq.y
   }));
 });
- 
+
 /* ============================================================
    3) SELECCIÓN DE EQUIPO Y RENDER DEL PANEL
    ============================================================ */
 let activeId = null;
- 
+
 function deselect(){
   activeId = null;
   document.querySelectorAll(".node.active").forEach(n=>n.classList.remove("active"));
@@ -1049,7 +1043,7 @@ function deselect(){
       Elegí un nodo numerado en el esquema para ver su función y, si tiene ensayo disponible, probarlo con distintos parámetros.
     </div>`;
 }
- 
+
 function selectEquipo(id){
   activeId = id;
   document.querySelectorAll(".node.active").forEach(n=>n.classList.remove("active"));
@@ -1057,7 +1051,7 @@ function selectEquipo(id){
   const eq = equipos.find(e=>e.id===id);
   renderPanel(eq);
 }
- 
+
 function renderPanel(eq){
   const panel = document.getElementById("panel");
   let html = `
@@ -1065,27 +1059,35 @@ function renderPanel(eq){
     <h2>${eq.name}</h2>
     <div class="desc">${eq.desc}</div>
   `;
+
+  if(eq.trial && eq.trial.custom === "pozoArbol"){
+    html += pozoArbolMarkup(eq);
+    panel.innerHTML = html;
+    setupPozoArbol();
+    return;
+  }
+
   if(eq.trial){
     html += `<div class="trial-box" id="trialBox"><h3>${eq.trial.title}</h3><div id="controls"></div><div class="result" id="result"></div></div>`;
   } else {
     html += `<div class="no-trial-note">Este equipo todavía no tiene ensayo interactivo cargado. Es un buen próximo paso: seguir el mismo patrón que los equipos marcados con ●.</div>`;
   }
   panel.innerHTML = html;
- 
+
   if(eq.trial) buildTrial(eq);
 }
- 
+
 /* ============================================================
    4) MOTOR DE ENSAYOS
    ============================================================ */
- 
+
 const trialState = {};
- 
+
 function buildTrial(eq){
   const controlsDiv = document.getElementById("controls");
   controlsDiv.innerHTML = "";
   trialState[eq.id] = {};
- 
+
   eq.trial.controls.forEach(c=>{
     if(c.type === "select"){
       trialState[eq.id][c.id] = c.options[0].v;
@@ -1098,12 +1100,22 @@ function buildTrial(eq){
         opt.value = o.v; opt.textContent = o.t;
         sel.appendChild(opt);
       });
-      sel.addEventListener("change", ()=>{
-        trialState[eq.id][c.id] = sel.value;
-        runTrial(eq);
-      });
       wrap.appendChild(sel);
       controlsDiv.appendChild(wrap);
+
+      let infoBox = null;
+      if(c.chemInfo){
+        infoBox = document.createElement("div");
+        infoBox.className = "chem-info";
+        infoBox.textContent = c.chemInfo[c.options[0].v];
+        controlsDiv.appendChild(infoBox);
+      }
+
+      sel.addEventListener("change", ()=>{
+        trialState[eq.id][c.id] = sel.value;
+        if(infoBox) infoBox.textContent = c.chemInfo[sel.value];
+        runTrial(eq);
+      });
     } else {
       trialState[eq.id][c.id] = c.def;
       const wrap = document.createElement("div");
@@ -1121,10 +1133,165 @@ function buildTrial(eq){
       controlsDiv.appendChild(wrap);
     }
   });
- 
+
   runTrial(eq);
 }
- 
+
+/* ============================================================
+   4b) ENSAYO ESPECIAL: pozo productor / árbol de navidad
+   Diagrama animado con tubing, casing, perforaciones, choke,
+   válvula maestra, asistencia de Gas Lift opcional y manómetro.
+   ============================================================ */
+
+function pozoArbolMarkup(eq){
+  return `
+  <div class="trial-box" id="trialBox">
+    <h3>${eq.trial.title}</h3>
+    <div class="well-wrap">
+      <svg class="well-svg" viewBox="0 0 220 500">
+        <!-- casing (revestimiento exterior) -->
+        <rect x="50" y="60" width="120" height="380" fill="#1a2530" stroke="var(--data)" stroke-width="1.5"/>
+        <!-- tubing (caño de producción interior) -->
+        <rect x="90" y="75" width="40" height="355" fill="#0d1319" stroke="var(--amber)" stroke-width="1.5"/>
+
+        <!-- perforaciones -->
+        <g stroke="var(--data)" stroke-width="1.2">
+          <line x1="40" y1="420" x2="50" y2="420"/>
+          <line x1="40" y1="432" x2="50" y2="432"/>
+          <line x1="170" y1="420" x2="180" y2="420"/>
+          <line x1="170" y1="432" x2="180" y2="432"/>
+        </g>
+
+        <!-- yacimiento -->
+        <rect x="20" y="440" width="180" height="35" fill="#241a12" stroke="var(--oil)" stroke-width="1"/>
+        <text x="110" y="461" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9" fill="var(--ink-dim)">YACIMIENTO</text>
+
+        <!-- etiquetas -->
+        <text x="63" y="250" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9" fill="var(--ink-dim)" transform="rotate(-90,63,250)">CASING</text>
+        <text x="110" y="250" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9" fill="var(--amber)" transform="rotate(-90,110,250)">TUBING</text>
+
+        <!-- particulas de petroleo (tubing) -->
+        <g id="oilParticles">
+          <circle class="oil-particle" cx="110" cy="415" r="4" fill="var(--oil)" style="animation-delay:0s"/>
+          <circle class="oil-particle" cx="110" cy="360" r="4" fill="var(--oil)" style="animation-delay:-1s"/>
+          <circle class="oil-particle" cx="110" cy="305" r="4" fill="var(--oil)" style="animation-delay:-2s"/>
+          <circle class="oil-particle" cx="110" cy="250" r="4" fill="var(--oil)" style="animation-delay:-3s"/>
+          <circle class="oil-particle" cx="110" cy="195" r="4" fill="var(--oil)" style="animation-delay:-4s"/>
+          <circle class="oil-particle" cx="110" cy="140" r="4" fill="var(--oil)" style="animation-delay:-5s"/>
+        </g>
+
+        <!-- particulas de gas lift (anular) -->
+        <g id="glParticles" opacity="0">
+          <circle class="gl-particle" cx="153" cy="90" r="3" fill="var(--gas)" style="animation-delay:0s"/>
+          <circle class="gl-particle" cx="153" cy="200" r="3" fill="var(--gas)" style="animation-delay:-1.2s"/>
+          <circle class="gl-particle" cx="153" cy="310" r="3" fill="var(--gas)" style="animation-delay:-2.4s"/>
+        </g>
+
+        <!-- valvula maestra -->
+        <rect id="masterValveIcon" x="95" y="46" width="30" height="14" rx="3" fill="var(--chem)"/>
+        <text x="110" y="36" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="7.5" fill="var(--ink-dim)">V. MAESTRA</text>
+
+        <!-- linea hacia choke -->
+        <path d="M130,53 L168,53 L168,46" stroke="var(--oil)" stroke-width="2.5" fill="none"/>
+        <rect x="161" y="31" width="14" height="16" rx="2" fill="var(--panel-2)" stroke="var(--amber)" stroke-width="1.5"/>
+        <rect id="chokeFill" x="163" y="45" width="10" height="0" fill="var(--amber)"/>
+        <text x="168" y="24" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="7.5" fill="var(--ink-dim)">CHOKE</text>
+
+        <!-- manometro -->
+        <circle cx="195" cy="70" r="16" fill="var(--panel-2)" stroke="var(--data)" stroke-width="1.5"/>
+        <line id="gaugeNeedle" class="gauge-needle" x1="195" y1="70" x2="195" y2="58" stroke="var(--danger)" stroke-width="2"/>
+        <text x="195" y="98" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="7.5" fill="var(--ink-dim)">MANÓMETRO</text>
+
+        <!-- inyeccion gas lift -->
+        <path id="glLine" d="M20,95 L50,95" stroke="var(--gas)" stroke-width="2.5" stroke-dasharray="2 4" opacity="0"/>
+        <text x="17" y="91" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="7.5" fill="var(--gas)">GAS LIFT</text>
+      </svg>
+
+      <div class="well-controls">
+        <div class="field">
+          <label>Válvula maestra</label>
+          <button id="masterValveBtn" class="valve-btn open" type="button">● Abierta — el pozo produce</button>
+        </div>
+        <div class="field">
+          <label>Choke (estrangulador) <span class="val" id="chokeVal">60%</span></label>
+          <input type="range" id="chokeSlider" min="0" max="100" step="5" value="60">
+        </div>
+        <div class="field">
+          <label>Asistencia Gas Lift (opcional) <span class="val" id="gasliftVal">0%</span></label>
+          <input type="range" id="gasliftSlider" min="0" max="100" step="5" value="0">
+        </div>
+        <div class="no-trial-note">La presión del yacimiento alcanza para un flujo natural constante: acá el Gas Lift es opcional, para simular qué pasaría si esa presión no fuera suficiente.</div>
+      </div>
+    </div>
+    <div class="result" id="pozoResult"></div>
+  </div>`;
+}
+
+function setupPozoArbol(){
+  const chokeSlider = document.getElementById("chokeSlider");
+  const gasliftSlider = document.getElementById("gasliftSlider");
+  const masterBtn = document.getElementById("masterValveBtn");
+  let masterOpen = true;
+
+  function update(){
+    const choke = Number(chokeSlider.value);
+    const gaslift = Number(gasliftSlider.value);
+    document.getElementById("chokeVal").textContent = choke+"%";
+    document.getElementById("gasliftVal").textContent = gaslift+"%";
+
+    document.getElementById("chokeFill").setAttribute("height", (choke/100*16).toFixed(1));
+    document.getElementById("chokeFill").setAttribute("y", (47-(choke/100*16)).toFixed(1));
+    document.getElementById("masterValveIcon").setAttribute("fill", masterOpen ? "var(--chem)" : "var(--danger)");
+
+    const Pstatic = 180; // kg/cm² — presión estática de referencia del yacimiento
+    let flow = 0, Pwh = Pstatic;
+    if(masterOpen && choke>0){
+      Pwh = Pstatic - choke*1.0;
+      flow = 220*Math.pow(choke/100,0.8)*(1+gaslift/100*0.35);
+    }
+
+    const glOn = masterOpen && gaslift>0;
+    document.getElementById("glParticles").setAttribute("opacity", glOn ? Math.min(1, gaslift/100+0.3) : 0);
+    document.getElementById("glLine").setAttribute("opacity", gaslift>0 ? 1 : 0);
+    document.querySelectorAll(".gl-particle").forEach(p=>{
+      p.style.animationDuration = (4 - gaslift/40)+"s";
+      p.style.animationPlayState = glOn ? "running" : "paused";
+    });
+
+    const dur = flow>0 ? Math.max(1.2, 7 - flow/45) : 1;
+    document.querySelectorAll(".oil-particle").forEach(p=>{
+      p.style.animationDuration = dur+"s";
+      p.style.animationPlayState = flow>0 ? "running" : "paused";
+      p.style.opacity = flow>0 ? 1 : 0.15;
+    });
+
+    const angle = Math.max(-60, Math.min(60, -60 + ((Pwh-60)/(190-60))*120));
+    document.getElementById("gaugeNeedle").style.transform = "rotate("+angle+"deg)";
+
+    const resultDiv = document.getElementById("pozoResult");
+    let out = "";
+    out += resultRow("Producción estimada", flow.toFixed(0)+" m³/d", Math.min(100, flow/280*100), "var(--oil)");
+    out += resultRow("Presión en boca de pozo", Pwh.toFixed(0)+" kg/cm²", (Pwh/Pstatic)*100, "var(--water)");
+
+    let verdict, cls;
+    if(!masterOpen){ verdict="Válvula maestra cerrada: el pozo está totalmente cerrado. No hay producción y el manómetro marca la presión estática del yacimiento."; cls="mid"; }
+    else if(choke===0){ verdict="Choke totalmente cerrado: aunque la válvula maestra esté abierta, no hay flujo. Equivale a tener el pozo cerrado."; cls="mid"; }
+    else if(gaslift>0){ verdict="Se sumó asistencia de Gas Lift: aumenta la producción, aunque en este pozo no era estrictamente necesario porque el yacimiento ya fluye por presión natural."; cls="good"; }
+    else { verdict="Flujo natural, regulado únicamente por el choke. La presión del yacimiento alcanza para producir sin necesidad de Gas Lift."; cls="good"; }
+    resultDiv.innerHTML = out + `<div class="verdict ${cls}">${verdict}</div>`;
+  }
+
+  masterBtn.addEventListener("click", ()=>{
+    masterOpen = !masterOpen;
+    masterBtn.textContent = masterOpen ? "● Abierta — el pozo produce" : "● Cerrada — pozo cerrado";
+    masterBtn.className = "valve-btn " + (masterOpen ? "open" : "closed");
+    update();
+  });
+  chokeSlider.addEventListener("input", update);
+  gasliftSlider.addEventListener("input", update);
+  update();
+}
+
 function resultRow(label, value, pct, color){
   return `
     <div class="row">
@@ -1134,12 +1301,12 @@ function resultRow(label, value, pct, color){
     <div class="bar-bg"><div class="bar-fill" style="width:${Math.max(0,Math.min(100,pct))}%; background:${color}"></div></div>
   `;
 }
- 
+
 function runTrial(eq){
   const s = trialState[eq.id];
   const resultDiv = document.getElementById("result");
   let out = "";
- 
+
   if(eq.trial.type === "calentador"){
     const T = s.temp;
     const visc = 900 * Math.exp(-0.022*(T-40));
@@ -1154,7 +1321,7 @@ function runTrial(eq){
     else { verdict="Temperatura excesiva: hay riesgo de vaporizar componentes livianos y mayor consumo energético."; cls="mid"; }
     out += `<div class="verdict ${cls}">${verdict}</div>`;
   }
- 
+
   if(eq.trial.type === "separador"){
     const q = s.caudal;
     let eff = 98 - (q-50)/450*45;
@@ -1170,7 +1337,7 @@ function runTrial(eq){
     else { verdict="Caudal alto: el fluido pasa demasiado rápido, se reduce el tiempo de residencia y baja la calidad de separación."; cls="bad"; }
     out += `<div class="verdict ${cls}">${verdict}</div>`;
   }
- 
+
   if(eq.trial.type === "quimica_proceso"){
     const dosis = s.dosis;
     let eff = 0, label = "";
@@ -1192,7 +1359,7 @@ function runTrial(eq){
     else { verdict="Dosis insuficiente para lograr el efecto esperado."; cls="mid"; }
     out += `<div class="verdict ${cls}">${verdict}</div>`;
   }
- 
+
   if(eq.trial.type === "quimica_agua"){
     const dosis = s.dosis;
     let corrosion=5, bacterias=5, incrustacion=5;
@@ -1208,7 +1375,7 @@ function runTrial(eq){
     else { verdict="Dosis dentro de un rango razonable de tratamiento."; cls="good"; }
     out += `<div class="verdict ${cls}">${verdict}</div>`;
   }
- 
+
   if(eq.trial.type === "gaslift"){
     const q = s.q;
     let prod = 500 + 1.15*q - 0.00055*q*q;
@@ -1221,9 +1388,10 @@ function runTrial(eq){
     else { verdict="Sobreinyección de gas: aumentan las pérdidas por fricción y el 'slippage', la producción deja de mejorar o cae."; cls="bad"; }
     out += `<div class="verdict ${cls}">${verdict}</div>`;
   }
- 
+
   resultDiv.innerHTML = out;
 }
+
 /* ============================================================
    5) TABLA DE PARÁMETROS Y LÍMITES
    ============================================================ */
@@ -1258,6 +1426,7 @@ const parametros = [
   ["Agua de inyección — filtros de alta velocidad","Tamaño de partícula retenida","5 a 10 μm (1-2 μm con coagulante)","Capacidad 6 a 8 USGPM/pie²"],
   ["Agua de purga a inyección","Hidrocarburos remanentes","< 100 ppm","A la salida del FWKO / tanque cortador"]
 ];
+
 const paramsBody = document.getElementById("paramsBody");
 function renderParams(filter){
   paramsBody.innerHTML = "";
@@ -1273,37 +1442,7 @@ function renderParams(filter){
 renderParams("");
 document.getElementById("paramSearch").addEventListener("input", e=>renderParams(e.target.value));
 </script>
-</script>
-  <script>
-// Botón para abrir/cerrar pozo
-const masterValve = document.getElementById("masterValve");
-const toggleWell = document.getElementById("toggleWell");
-const oilFlow = document.getElementById("oilFlow");
-let wellOpen = true;
-toggleWell.addEventListener("click", () => {
-    wellOpen = !wellOpen;
-    if (wellOpen) {
-        oilFlow.style.opacity = "1"; // flujo visible
-        toggleWell.textContent = "Pozo Abierto";
-        masterValve.classList.add("open");
-    } else {
-        oilFlow.style.opacity = "0"; // flujo detenido
-        toggleWell.textContent = "Pozo Cerrado";
-        masterValve.classList.remove("open");
-    }
-});
-// Slider para choke
-const chokeSlider = document.getElementById("chokeSlider");
-const chokeLabel = document.getElementById("chokeLabel");
-chokeSlider.addEventListener("input", () => {
-    const value = chokeSlider.value;
-    chokeLabel.textContent = value + "%";
-    // Ajusta intensidad del flujo según choke
-    if (wellOpen) {
-        oilFlow.style.opacity = value / 100; 
-    }
-});
-</script>
 </body>
+</html>
 </html>
  
